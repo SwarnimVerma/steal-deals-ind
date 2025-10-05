@@ -23,9 +23,7 @@ interface DealCardProps {
 
 export const DealCard = ({ deal }: DealCardProps) => {
   const { toast } = useToast();
-
-  // Create local state to track clicks
-  const [clicks, setClicks] = useState(deal.clicks);
+  const [clicks, setClicks] = useState<number>(deal.clicks);
 
   const discountPercentage = Math.round(
     ((deal.original_price - deal.discounted_price) / deal.original_price) * 100
@@ -33,18 +31,14 @@ export const DealCard = ({ deal }: DealCardProps) => {
 
   const handleBuyNow = async () => {
     try {
-      // Atomically increment clicks in Supabase
+      // Call RPC to increment clicks in Supabase
       const { error } = await supabase
-        .from("deals")
-        .update({ clicks: supabase.raw("clicks + 1") })
-        .eq("id", deal.id);
+        .rpc<any>("increment_deal_clicks", { deal_id: deal.id });
 
-      if (error) {
-        console.error("Failed to update click count:", error);
-      } else {
-        // Update local state so UI refreshes
-        setClicks(prev => prev + 1);
-      }
+      if (error) throw error;
+
+      // Update local state immediately
+      setClicks(prev => prev + 1);
 
       // Open affiliate link
       window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
@@ -54,7 +48,12 @@ export const DealCard = ({ deal }: DealCardProps) => {
         description: "Opening deal in new tab",
       });
     } catch (err) {
-      console.error("Error in handleBuyNow:", err);
+      console.error("Failed to update click count:", err);
+      toast({
+        title: "Error",
+        description: "Could not update click count",
+        variant: "destructive",
+      });
     }
   };
 
