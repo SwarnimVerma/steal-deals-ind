@@ -32,9 +32,7 @@ export const DealCard = ({ deal }: DealCardProps) => {
   const handleBuyNow = async () => {
     try {
       // Call RPC to increment clicks in Supabase
-      const { error } = await supabase
-        .rpc<any>("increment_deal_clicks", { deal_id: deal.id });
-
+      const { error } = await supabase.rpc("increment_deal_clicks", { deal_id: deal.id });
       if (error) throw error;
 
       // Update local state immediately
@@ -59,7 +57,6 @@ export const DealCard = ({ deal }: DealCardProps) => {
 
   return (
     <div className="deal-card bg-card rounded-lg overflow-hidden border group">
-      {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-muted">
         <img
           src={deal.image_url}
@@ -67,8 +64,6 @@ export const DealCard = ({ deal }: DealCardProps) => {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
         />
-        
-        {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-2">
           {deal.is_trending && (
             <Badge variant="destructive" className="badge-pulse bg-deal text-deal-foreground border-0">
@@ -82,8 +77,6 @@ export const DealCard = ({ deal }: DealCardProps) => {
             </Badge>
           )}
         </div>
-
-        {/* Category Badge */}
         <div className="absolute top-2 right-2">
           <Badge variant="secondary" className="bg-card/90 backdrop-blur">
             {deal.category}
@@ -91,14 +84,11 @@ export const DealCard = ({ deal }: DealCardProps) => {
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-4 space-y-3">
-        {/* Title */}
         <h3 className="font-semibold line-clamp-2 text-card-foreground min-h-[3rem]">
           {deal.title}
         </h3>
 
-        {/* Pricing */}
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-bold text-deal">
             ₹{deal.discounted_price.toLocaleString()}
@@ -111,16 +101,14 @@ export const DealCard = ({ deal }: DealCardProps) => {
           </span>
         </div>
 
-        {/* Stats */}
         <div className="flex items-center text-xs text-muted-foreground">
           <TrendingUp className="h-3 w-3 mr-1" />
           {clicks} people grabbed this deal
         </div>
 
-        {/* Buy Button */}
-        <Button 
+        <Button
           onClick={handleBuyNow}
-          variant="deal" 
+          variant="deal"
           className="w-full"
           size="lg"
         >
