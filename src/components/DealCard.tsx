@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface Deal {
   id: string;
@@ -22,28 +23,39 @@ interface DealCardProps {
 
 export const DealCard = ({ deal }: DealCardProps) => {
   const { toast } = useToast();
+
+  // Create local state to track clicks
+  const [clicks, setClicks] = useState(deal.clicks);
+
   const discountPercentage = Math.round(
     ((deal.original_price - deal.discounted_price) / deal.original_price) * 100
   );
 
   const handleBuyNow = async () => {
-    // Increment click count
     try {
-      await supabase
+      // Atomically increment clicks in Supabase
+      const { error } = await supabase
         .from("deals")
-        .update({ clicks: deal.clicks + 1 })
+        .update({ clicks: supabase.raw("clicks + 1") })
         .eq("id", deal.id);
-    } catch (error) {
-      console.error("Failed to update click count:", error);
-    }
 
-    // Open affiliate link
-    window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
-    
-    toast({
-      title: "Redirecting...",
-      description: "Opening deal in new tab",
-    });
+      if (error) {
+        console.error("Failed to update click count:", error);
+      } else {
+        // Update local state so UI refreshes
+        setClicks(prev => prev + 1);
+      }
+
+      // Open affiliate link
+      window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
+
+      toast({
+        title: "Redirecting...",
+        description: "Opening deal in new tab",
+      });
+    } catch (err) {
+      console.error("Error in handleBuyNow:", err);
+    }
   };
 
   return (
@@ -103,7 +115,7 @@ export const DealCard = ({ deal }: DealCardProps) => {
         {/* Stats */}
         <div className="flex items-center text-xs text-muted-foreground">
           <TrendingUp className="h-3 w-3 mr-1" />
-          {deal.clicks} people grabbed this deal
+          {clicks} people grabbed this deal
         </div>
 
         {/* Buy Button */}
